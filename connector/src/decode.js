@@ -71,24 +71,49 @@ export function decodeMeasurement(buffer) {
   return shot;
 }
 
+// Fields of `part` that are present overwrite those of `base`; flags are ORed together.
+function mergeParts(base, part) {
+  const merged = { ...base, flags: base.flags | part.flags };
+  for (const field of FIELDS) {
+    if (part[field.key] !== null) merged[field.key] = part[field.key];
+  }
+  return merged;
+}
+
+// The R10 can split one shot across several notifications. Each notification is a complete
+// measurement with its own flags and shot id, carrying a subset of the fields; MORE_DATA in its
+// flags means another notification for the same shot follows. A real shot arrives as
+// flags 0x00ff (ball fields, club speed, face angle) then flags 0x0f00 (path, attack, spin type,
+// shot type). The parts must be decoded one by one: concatenating the bytes and decoding once
+// reads only the first header's flags and drops every field in the later notifications.
 export class ShotAssembler {
-  #parts = [];
+  #pending = null;
   #lastShotId = null;
 
   push(notification) {
-    this.#parts.push(notification);
-    if (hasMoreData(notification)) return null;
+    let part;
+    try {
+      part = decodeMeasurement(notification);
+    } catch (err) {
+      this.#pending = null;
+      throw err;
+    }
 
-    const buffer = Buffer.concat(this.#parts);
-    this.#parts = [];
-    const shot = decodeMeasurement(buffer);
+    // A part for a different shot id abandons the unfinished one.
+    const shot = this.#pending?.shotId === part.shotId ? mergeParts(this.#pending, part) : part;
+    if (part.flags & FLAG.MORE_DATA) {
+      this.#pending = shot;
+      return null;
+    }
+
+    this.#pending = null;
     if (shot.shotId === this.#lastShotId) return null;
     this.#lastShotId = shot.shotId;
     return shot;
   }
 
   reset() {
-    this.#parts = [];
+    this.#pending = null;
   }
 }
 

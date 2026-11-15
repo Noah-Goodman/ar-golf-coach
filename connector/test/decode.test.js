@@ -266,25 +266,47 @@ describe('ShotAssembler', () => {
     assert.equal(a.push(encode(0, {})), null);
   });
 
-  test('multi-notification shot waits while the first byte of each notification has bit 0 set', () => {
-    // Launch direction -1023 = 0xfc01: the continuation starting at its low byte begins with 0x01.
-    // Path angle -262 = 0xfefa: the final notification starting at its low byte begins with 0xfa.
-    const raw = { ...FULL, launchDirectionRad: -1023, pathAngleRad: -262 };
-    const buf = encode(2, raw, FLAG.MORE_DATA);
-    const parts = [buf.subarray(0, 10), buf.subarray(10, 20), buf.subarray(20)];
-    assert.deepEqual(parts.map(hasMoreData), [true, true, false]);
+  test('a real two-notification shot merges both headers, including path and attack angle', () => {
+    // Recorded from an R10: flags 0x00ff then flags 0x0f00, both for shot id 0x22996.
+    const parts = ['ff0096290200ff1db0170cfb9b15fefc241c34f9', '000f962902000b05d0fa0001'].map((h) =>
+      Buffer.from(h, 'hex'),
+    );
     const a = new ShotAssembler();
     assert.equal(a.push(parts[0]), null);
-    assert.equal(a.push(parts[1]), null);
-    const shot = a.push(parts[2]);
-    assert.deepEqual(shot, expected(2, raw, FLAG.MORE_DATA));
+    assert.deepEqual(
+      a.push(parts[1]),
+      expected(
+        0x22996,
+        {
+          ballSpeedMps: 7679, launchAngleRad: 6064, launchDirectionRad: -1268, backspinRpm: 5531, sidespinRpm: -770,
+          clubSpeedMps: 7204, faceAngleRad: -1740, pathAngleRad: 1291, attackAngleRad: -1328, spinType: 0, shotType: 1,
+        },
+        FLAG.MORE_DATA,
+      ),
+    );
   });
 
-  test('decode error clears the partial buffer and propagates', () => {
+  test('multi-notification shot waits while each part has MORE_DATA set', () => {
+    const ball = { ballSpeedMps: FULL.ballSpeedMps, launchAngleRad: FULL.launchAngleRad };
+    const club = { clubSpeedMps: FULL.clubSpeedMps, faceAngleRad: FULL.faceAngleRad };
+    const rest = { pathAngleRad: FULL.pathAngleRad, spinType: FULL.spinType };
     const a = new ShotAssembler();
-    assert.equal(a.push(Buffer.from([0x03, 0x00, 0x05])), null);
+    assert.equal(a.push(encode(2, ball, FLAG.MORE_DATA)), null);
+    assert.equal(a.push(encode(2, club, FLAG.MORE_DATA)), null);
+    assert.deepEqual(a.push(encode(2, rest)), expected(2, { ...ball, ...club, ...rest }, FLAG.MORE_DATA));
+  });
+
+  test('a part for a new shot id abandons the unfinished shot', () => {
+    const a = new ShotAssembler();
+    assert.equal(a.push(encode(1, { ballSpeedMps: 256 }, FLAG.MORE_DATA)), null);
+    assert.deepEqual(a.push(encode(2, { clubSpeedMps: 512 })), expected(2, { clubSpeedMps: 512 }));
+  });
+
+  test('decode error clears the unfinished shot and propagates', () => {
+    const a = new ShotAssembler();
+    assert.equal(a.push(encode(5, { clubSpeedMps: 256 }, FLAG.MORE_DATA)), null);
     assert.throws(() => a.push(Buffer.from([0x00])), DecodeError);
-    // Next shot decodes on its own, with no leftover bytes from before.
+    // The rest of shot 5 decodes on its own, with no fields left over from before the error.
     assert.deepEqual(a.push(encode(5, { ballSpeedMps: 512 })), expected(5, { ballSpeedMps: 512 }));
   });
 
@@ -295,13 +317,13 @@ describe('ShotAssembler', () => {
     assert.equal(a.push(encode(4, {})), null);
   });
 
-  test('reset discards the partial buffer and keeps the last id', () => {
+  test('reset discards the unfinished shot and keeps the last id', () => {
     const a = new ShotAssembler();
     assert.equal(a.push(encode(1, FULL)).shotId, 1);
-    assert.equal(a.push(Buffer.from([0xff, 0x0f, 0x09])), null);
+    assert.equal(a.push(encode(3, { ballSpeedMps: 256 }, FLAG.MORE_DATA)), null);
     a.reset();
     assert.equal(a.push(encode(1, FULL)), null);
-    assert.equal(a.push(encode(3, {})).shotId, 3);
+    assert.deepEqual(a.push(encode(3, { clubSpeedMps: 512 })), expected(3, { clubSpeedMps: 512 }));
   });
 });
 
@@ -509,8 +531,34 @@ describe('synthetic session fixture', () => {
     ]);
   });
 
-  test('multi-notification shots obey the first-byte rule', () => {
+  test('multi-notification shots set MORE_DATA on every part but the last', () => {
     const measurement = packets.filter((p) => p.char === 'measurement').map((p) => Buffer.from(p.hex, 'hex'));
     assert.deepEqual(measurement.map(hasMoreData), [false, true, true, false, false, false, true, false]);
+  });
+});
+
+describe('recorded session fixture', () => {
+  const path = fileURLToPath(new URL('./fixtures/recorded-session.jsonl', import.meta.url));
+  const measurements = readFileSync(path, 'utf8')
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => JSON.parse(line))
+    .filter((p) => p.char === 'measurement');
+
+  test('every full shot has path and attack angle; club-only reads have no ball fields', () => {
+    const assembler = new ShotAssembler();
+    const shots = measurements.map((p) => assembler.push(Buffer.from(p.hex, 'hex'))).filter(Boolean);
+    assert.deepEqual(
+      shots.map((s) => [s.shotId, s.flags]),
+      [[0x1e09b, 0x0840], [0x1edad, 0x0840], [0x22996, 0x0fff], [0x2af24, 0x0fff], [0x2f8e4, 0x0fff]],
+    );
+    for (const shot of shots.slice(0, 2)) {
+      assert.equal(shot.ballSpeedMps, null);
+      assert.equal(shot.pathAngleRad, null);
+      assert.notEqual(shot.clubSpeedMps, null);
+    }
+    for (const shot of shots.slice(2)) {
+      for (const [, key] of LAYOUT) assert.notEqual(shot[key], null, `${key} of shot ${shot.shotId}`);
+    }
   });
 });

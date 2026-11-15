@@ -4,9 +4,9 @@
 {"t":1761500014760,"char":"measurement","hex":"fe0f01000000003cdd0f0cfe1c0c3efe3329bc0270feaefc0101"}
 {"t":1761500015070,"char":"status","hex":"000001"}
 {"t":1761500017170,"char":"status","hex":"000000"}
-{"t":1761500033970,"char":"measurement","hex":"ff0f020000008046b80b"}
-{"t":1761500034000,"char":"measurement","hex":"01fc501462024d2fd4fe"}
-{"t":1761500034030,"char":"measurement","hex":"fafe50fb0001"}
+{"t":1761500033970,"char":"measurement","hex":"3f00020000008046b80b01fc50146202"}
+{"t":1761500034000,"char":"measurement","hex":"c100020000004d2fd4fe"}
+{"t":1761500034030,"char":"measurement","hex":"000f02000000fafe50fb0001"}
 {"t":1761500034310,"char":"status","hex":"000001"}
 {"t":1761500034460,"char":"measurement","hex":"fe0f020000008046b80b01fc501462024d2fd4fefafe50fb0001"}
 {"t":1761500036360,"char":"status","hex":"000000"}
@@ -18,8 +18,8 @@
 {"t":1761500360730,"char":"status","hex":"000000"}
 {"t":1761500405730,"char":"status","hex":"0102034e6f74206c6576656c20e2809320706c61636520523130206f6e20666c61742067726f756e64"}
 {"t":1761500414730,"char":"status","hex":"000000"}
-{"t":1761500426730,"char":"measurement","hex":"ff0f0400000000419808a401"}
-{"t":1761500426760,"char":"measurement","hex":"60092c01002d9600fa0090010201"}
+{"t":1761500426730,"char":"measurement","hex":"ff000400000000419808a40160092c01002d9600"}
+{"t":1761500426760,"char":"measurement","hex":"000f04000000fa0090010201"}
 {"t":1761500427010,"char":"status","hex":"000001"}
 {"t":1761500429010,"char":"status","hex":"000000"}
 {"t":1761500489010,"char":"battery","hex":"56"}
