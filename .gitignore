@@ -1,0 +1,21 @@
+# Unity (generated, never commit)
+GolfAR/[Ll]ibrary/
+GolfAR/[Tt]emp/
+GolfAR/[Oo]bj/
+GolfAR/[Bb]uild/
+GolfAR/[Bb]uilds/
+GolfAR/[Ll]ogs/
+GolfAR/[Uu]ser[Ss]ettings/
+GolfAR/*.csproj
+GolfAR/*.sln
+GolfAR/*.apk
+GolfAR/.vs/
+GolfAR/.idea/
+
+# macOS
+.DS_Store
+
+# Connector
+connector/node_modules/
+connector/config.json
+connector/logs/
