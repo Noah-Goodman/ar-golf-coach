@@ -1,0 +1,21 @@
+{
+  "name": "r10-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Connects to a Garmin Approach R10 over Bluetooth LE and serves each shot as JSON over a local WebSocket.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test",
+    "fake": "node tools/fake-shots.js",
+    "replay": "node tools/replay.js"
+  },
+  "dependencies": {
+    "@stoprocent/noble": "^2.8.0",
+    "ws": "^8.23.0"
+  }
+}
