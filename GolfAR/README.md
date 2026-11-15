@@ -66,16 +66,3 @@ Scripts: `Assets/Scripts/` (BallPlacer, R10Receiver) and `Assets/Scripts/ShotVis
 - **Controller > Reveal Stats After Landing**: predict-then-reveal drill.
 - **Ball Placer > Editor Eye Position / Angles**: camera pose in the Editor only.
 
-## Sign conventions
-
-Not yet confirmed on hardware. Run the sign test in `../connector/README.md` (pushes and pulls). Wrong signs are fixed in the connector (`SIGN` in `connector/src/toMessage.js`). Until sidespin is confirmed, keep Controller > Settings > Sidespin Convention on `InferFromFaceToPath`.
-
-## Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| Pink lines in the build | Assign `LineMat` (URP Particles/Unlit, Transparent) to Line Material on Trajectory and Club Delivery. |
-| No text on the card | Import TMP Essentials with Play stopped. |
-| `[R10] bridge offline` | Connector isn't running, or the Quest isn't connected by USB (`adb devices`). |
-| Changes disappear | They were made in Play mode. Stop Play, redo, Cmd+S. |
-| Visuals drift from the ball | Headset recentered. Press B and mark again. |
