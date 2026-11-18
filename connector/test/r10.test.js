@@ -307,14 +307,16 @@ test('shots: split notifications give one shot, repeated ids give none', async (
   await ctx.r10.start();
   await connectReady(ctx);
 
-  // flags 0x0003 (more data + ball speed), shot id 0x01020304, then ball speed 0x2000 (32 m/s).
-  ctx.chars.measurement.notify('030004030201');
+  // Shot id 0x01020304: flags 0x0003 (more data + ball speed 0x2000, 32 m/s), then its own header
+  // with flags 0x0040 (club speed 0x1000, 16 m/s).
+  ctx.chars.measurement.notify('0300040302010020');
   assert.equal(ctx.events.shot.length, 0);
-  ctx.chars.measurement.notify('0020');
+  ctx.chars.measurement.notify('4000040302010010');
   assert.equal(ctx.events.shot.length, 1);
   const { raw, receivedAt } = ctx.events.shot[0];
   assert.equal(raw.shotId, 0x01020304);
   assert.equal(raw.ballSpeedMps, 32);
+  assert.equal(raw.clubSpeedMps, 16);
   assert.equal(receivedAt, ctx.events.packet.at(-1).t);
 
   ctx.chars.measurement.notify('0200040302010020');
