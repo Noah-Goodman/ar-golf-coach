@@ -1,0 +1,10 @@
+# ninja log v5
+1	833	1795037938763078883	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	e52c5a8cddef455a
+2	1147	1795037939076029850	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	2e4bf7e2dacbe8f3
+0	1223	1795037939150503872	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	3f59605659a236ba
+2	1255	1795037939184118610	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	da59daf0997e5fc0
+0	1306	1795037939237769951	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	2f26c52bbc687372
+6	1378	1795037939309266614	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	62a0256253b3bf84
+2	1535	1795037939465756410	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	2ec16dfbeb91443f
+0	1667	1795037939597753502	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	add924b46c3e1e48
+1668	1739	1795037939670198160	/Users/noahgoodman/Desktop/CS 485 - XR/ar-golf-coach/GolfAR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2a3e6r34/obj/arm64-v8a/libgame.so	d532a2238e80e6e3

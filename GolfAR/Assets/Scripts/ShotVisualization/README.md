@@ -32,9 +32,9 @@ The JSON field names must match `ShotData.cs` exactly (`ball.speedMph`, `club.fa
 | `faceAngleDeg` | + = face points right (open for a right-hander) |
 | `pathAngleDeg` | + = club moving right (in-to-out for a right-hander) |
 | `attackAngleDeg` | − = hitting down |
-| `sidespinRpm` | unknown, so by default only its size is used and the curve direction comes from face minus path |
+| `sidespinRpm` | + = ball curves right (the connector sends it this way). By default only its size is used and the curve direction comes from face minus path; shots without club data use its sign |
 
-All of these are switches under **Settings** on the controller. Once we know the R10's sidespin sign, change **Sidespin Convention** from `InferFromFaceToPath` to the matching option.
+All of these are switches under **Settings** on the controller. **Sidespin Convention** can be set to `PositiveCurvesRight` to take the curve direction from sidespin instead of face minus path.
 
 ## What each file does
 

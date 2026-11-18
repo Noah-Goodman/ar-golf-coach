@@ -1,0 +1,2 @@
+/Users/noahgoodman/Desktop/CS 485 - XR/ar-golf-coach/GolfAR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/CMakeLists.txt
+/Users/noahgoodman/Desktop/CS 485 - XR/ar-golf-coach/GolfAR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/CMakeLists.txt

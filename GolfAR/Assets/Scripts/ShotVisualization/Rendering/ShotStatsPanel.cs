@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace ArGolfCoach.Visualization
     /// </summary>
     public class ShotStatsPanel : MonoBehaviour
     {
-        public enum Placement { NearTee, FollowHead, ViewCorner }
+        public enum Placement { NearTee, FollowHead, ViewCorner, InRoom }
 
         [Header("Placement")]
         public Placement placement = Placement.NearTee;
@@ -26,6 +27,9 @@ namespace ArGolfCoach.Visualization
         [Tooltip("ViewCorner: head-locked HUD. x right, y up, z forward from the eyes, in meters.")]
         public Vector3 cornerOffset = new Vector3(0.38f, 0.2f, 1f);
         public float cornerSmoothing = 15f;
+        [Tooltip("InRoom: where the card appears at launch, from the eyes (x right, y up, z forward), in meters. " +
+                 "It then stays put in the room; grab the bar under it to move it.")]
+        public Vector3 roomOffset = new Vector3(0.25f, 0f, 1.3f);
         public bool faceThePlayer = true;
 
         [Header("Look")]
@@ -39,9 +43,23 @@ namespace ArGolfCoach.Visualization
         Canvas canvas;
         RectTransform canvasRect;
         TextMeshProUGUI header, labelsColumn, valuesColumn, footer;
+        RectTransform linesButton;
+        Image linesButtonBg;
+        TextMeshProUGUI linesButtonLabel;
+
+        static readonly Color ButtonColor = new Color(1f, 1f, 1f, 0.10f);
+        static readonly Color ButtonHoverColor = new Color(1f, 1f, 1f, 0.28f);
+
+        /// <summary>The Show/Hide lines button was pressed (BallPlacer calls PressLinesButton).</summary>
+        public event Action LinesButtonPressed;
         Pose tee = new Pose(Vector3.zero, Quaternion.identity);
         bool hasTee;
         float pulse;
+
+        /// <summary>The card itself (the canvas), for placing things beside it.</summary>
+        public RectTransform Card { get { Build(); return canvasRect; } }
+        /// <summary>InRoom: true once the card has been put in front of the player.</summary>
+        public bool Spawned { get; private set; }
 
         void Awake() { Build(); }
 
@@ -119,6 +137,26 @@ namespace ArGolfCoach.Visualization
 
         public void Hide() { if (canvas != null) canvas.gameObject.SetActive(false); }
 
+        /// <summary>Shows the top-right button with this label, or hides it.</summary>
+        public void SetLinesButton(bool visible, string label)
+        {
+            Build();
+            linesButton.gameObject.SetActive(visible);
+            linesButtonLabel.text = label;
+        }
+
+        public bool LinesButtonAt(Vector3 worldPoint)
+        {
+            return linesButton != null && linesButton.gameObject.activeInHierarchy && GrabHandle.Contains(linesButton, worldPoint);
+        }
+
+        public void SetLinesButtonHover(bool on)
+        {
+            if (linesButtonBg != null) linesButtonBg.color = on ? ButtonHoverColor : ButtonColor;
+        }
+
+        public void PressLinesButton() { if (LinesButtonPressed != null) LinesButtonPressed(); }
+
         static void Section(StringBuilder L, StringBuilder V, string title, string hex)
         {
             if (L.Length > 0) { L.Append("\n"); V.Append("\n"); }
@@ -151,7 +189,17 @@ namespace ArGolfCoach.Visualization
             Camera cam = Camera.main;
             Transform t = canvas.transform;
 
-            if (placement == Placement.FollowHead && cam != null)
+            if (placement == Placement.InRoom)
+            {
+                // Placed once in front of the player; after that only GrabHandle moves it.
+                if (!Spawned && GrabHandle.HeadReady(cam))
+                {
+                    Pose p = GrabHandle.SpawnPose(cam.transform, roomOffset);
+                    t.SetPositionAndRotation(p.position, p.rotation);
+                    Spawned = true;
+                }
+            }
+            else if (placement == Placement.FollowHead && cam != null)
             {
                 Transform head = cam.transform;
                 Vector3 flatForward = Vector3.ProjectOnPlane(head.forward, Vector3.up).normalized;
@@ -173,7 +221,7 @@ namespace ArGolfCoach.Visualization
                 t.position = tee.position + tee.rotation * offsetFromTee;
             }
 
-            if (faceThePlayer && cam != null && placement != Placement.ViewCorner)
+            if (faceThePlayer && cam != null && placement != Placement.ViewCorner && placement != Placement.InRoom)
             {
                 Vector3 away = t.position - cam.transform.position;
                 away.y = 0f; // stay upright
@@ -199,14 +247,27 @@ namespace ArGolfCoach.Visualization
             canvasRect = go.GetComponent<RectTransform>();
             canvasRect.sizeDelta = sizePixels;
             go.transform.localScale = Vector3.one * metersPerPixel;
+            if (placement == Placement.InRoom) GrabHandle.Add(canvasRect);
 
             var bg = new GameObject("Background").AddComponent<Image>();
             bg.transform.SetParent(go.transform, false);
             bg.color = backgroundColor;
             Stretch(bg.rectTransform, 0f, 0f, 0f, 0f);
 
+            // Header stops short of the Show/Hide lines button in the top-right corner.
             header = Text("Header", go.transform, 44f, TextAlignmentOptions.TopLeft);
-            Stretch(header.rectTransform, 36f, 32f, 36f, sizePixels.y - 150f);
+            Stretch(header.rectTransform, 36f, 32f, 198f, sizePixels.y - 150f);
+
+            linesButtonBg = new GameObject("Lines Button").AddComponent<Image>();
+            linesButtonBg.transform.SetParent(go.transform, false);
+            linesButtonBg.color = ButtonColor;
+            linesButton = linesButtonBg.rectTransform;
+            linesButton.anchorMin = linesButton.anchorMax = linesButton.pivot = new Vector2(1f, 1f);
+            linesButton.anchoredPosition = new Vector2(-36f, -36f);
+            linesButton.sizeDelta = new Vector2(150f, 56f);
+            linesButtonLabel = Text("Label", linesButton, 24f, TextAlignmentOptions.Center);
+            Stretch(linesButtonLabel.rectTransform, 0f, 0f, 0f, 0f);
+            linesButton.gameObject.SetActive(false);
 
             labelsColumn = Text("Labels", go.transform, 26f, TextAlignmentOptions.TopLeft);
             Stretch(labelsColumn.rectTransform, 36f, 160f, sizePixels.x * 0.48f, 150f);

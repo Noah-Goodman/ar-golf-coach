@@ -63,7 +63,7 @@ describe('constants', () => {
   // Documents the defaults shipped before the push/pull sign test. Update this test, and only
   // this test, when a constant is flipped after that test.
   test('SIGN default values', () => {
-    assert.deepEqual(SIGN, { launchDirection: -1, faceAngle: 1, pathAngle: 1, sidespin: 1 });
+    assert.deepEqual(SIGN, { launchDirection: -1, faceAngle: -1, pathAngle: -1, sidespin: -1 });
   });
 
   test('every SIGN value is 1 or -1', () => {

@@ -85,7 +85,7 @@ Shot:
 - `ball` and `club` always have every key; a value the R10 did not send is `null` (club data is often missing).
 - Speeds in mph, angles in degrees, rounded to 2 decimals. Spin in rpm.
 - Horizontal angles (`launchDirectionDeg`, `faceAngleDeg`, `pathAngleDeg`): positive = right of the target line, seen from behind the ball, whatever the golfer's handedness. Launch and attack angle: positive = up.
-- `sidespinRpm` is passed through with the sign the R10 sends; which direction positive means is not yet established.
+- `sidespinRpm`: positive = the ball curves right, whatever the golfer's handedness.
 - `spinMeasured`: `true` when the R10 measured spin, `false` when it estimated it, `null` when it did not say.
 - `receivedAt`: Unix ms when the shot's last notification arrived.
 
@@ -101,12 +101,12 @@ Status:
 
 ## Sign test
 
-The direction of the horizontal values is set by `SIGN` in `src/toMessage.js`. `launchDirection` is `-1` (a guess taken from OpenGolfSim); `faceAngle`, `pathAngle` and `sidespin` are `+1`. None is confirmed on hardware yet. To check them:
+The direction of the horizontal values is set by `SIGN` in `src/toMessage.js`. The R10 sends launch direction, face angle and path angle with positive = left, so all three are `-1`. This was confirmed right-handed on hardware: face and path showed mirrored with `+1`, and on every logged shot the raw launch direction has the same sign as 0.75 × face + 0.25 × path. `sidespin` is also `-1`, so positive means the ball curves right: on every logged shot the raw sidespin has the same sign as raw face minus path, which is positive for a ball curving left. Left-handed is not yet checked. To check them:
 
 1. Run the bridge, so packets are logged.
 2. Right-handed, hit a few obvious pushes (ball starts right of the target), then a few obvious pulls (ball starts left).
 3. Stop the bridge and run `node tools/replay.js logs/<file>.jsonl --print`.
-4. For each push, the v1 `launchDirectionDeg` should be positive and for each pull negative. A face pointing right of the target should give a positive `faceAngleDeg`, and a club travelling to the right through impact a positive `pathAngleDeg`. Where a value has the wrong sign, flip that entry in `SIGN`. Note which way the ball curved against the sign of `sidespinRpm`, to settle what its sign means.
+4. For each push, the v1 `launchDirectionDeg` should be positive and for each pull negative. A face pointing right of the target should give a positive `faceAngleDeg`, and a club travelling to the right through impact a positive `pathAngleDeg`. A ball curving right should give a positive `sidespinRpm`. Where a value has the wrong sign, flip that entry in `SIGN`.
 5. Repeat left-handed. This shows whether the R10 flips face and path signs for left-handers. Keep the logs in `test/fixtures/` (for example `signtest-right-push.jsonl`).
 
 ## Tests

@@ -45,6 +45,13 @@ namespace ArGolfCoach.Visualization
 
         public bool IsPlaying { get { return playRoutine != null; } }
 
+        /// <summary>Adds the root object of the current shot and of each faded earlier shot.</summary>
+        public void CollectShotRoots(List<GameObject> into)
+        {
+            if (current != null && current.root != null) into.Add(current.root);
+            foreach (ShotVisual v in history) if (v.root != null) into.Add(v.root);
+        }
+
         class ShotVisual
         {
             public GameObject root;

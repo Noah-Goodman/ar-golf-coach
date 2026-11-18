@@ -40,6 +40,9 @@ namespace ArGolfCoach.Visualization
         public Color arcColor = VizColors.Text;
 
         GameObject root;
+
+        /// <summary>The diagram's root object; null until the first shot.</summary>
+        public GameObject Root { get { return root; } }
         readonly List<LineRenderer> lines = new List<LineRenderer>();
         readonly List<TextMeshPro> labels = new List<TextMeshPro>();
         int lineCursor, labelCursor;

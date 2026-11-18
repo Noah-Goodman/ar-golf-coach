@@ -4,10 +4,13 @@ export const PROTOCOL_VERSION = 1;
 export const MPS_TO_MPH = 2.236936;
 
 // Multiplier applied to each raw value. For the three angles the goal is positive = right of
-// the target line, seen from behind the ball. launchDirection is -1 because OpenGolfSim negates
-// it; faceAngle and pathAngle are unconfirmed passthrough. All three await the push/pull sign test.
-// sidespin has no agreed direction yet, so it is passed through as the R10 sends it.
-export const SIGN = { launchDirection: -1, faceAngle: 1, pathAngle: 1, sidespin: 1 };
+// the target line, seen from behind the ball. The R10 sends all three with positive = left
+// (checked on hardware, right-handed: face and path showed mirrored in the headset, and the raw
+// launch direction matches 0.75 x face + 0.25 x path in sign on every logged shot), so all three
+// are negated. sidespin is negated so that positive = the ball curves right: the raw sidespin has
+// the same sign as raw face minus path on every logged shot, and that difference is positive when
+// the ball curves left.
+export const SIGN = { launchDirection: -1, faceAngle: -1, pathAngle: -1, sidespin: -1 };
 
 const RAD_TO_DEG = 180 / Math.PI;
 
